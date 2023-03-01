@@ -1,0 +1,32 @@
+import telebot
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# Авторизация в Google API
+scope = ['https://www.googleapis.com/auth/spreadsheets']
+creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+client = gspread.authorize(creds)
+
+# Получение доступа к таблице
+
+gc = gspread.service_account(filename='credentials.json')
+sh = gc.open_by_key('YOUR_SHEET_ID')
+worksheet = sh.sheet1
+
+# Авторизация в Telegram Bot API
+bot = telebot.TeleBot('YOUR_BOT_TOKEN')
+
+
+# Обработка команды /start
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id, 'Я добавлю ваши данные в таблицу')
+
+
+# Обработка сообщений пользователя
+@bot.message_handler(content_types=['text'])
+def send_text(message):
+    # Запись сообщения в таблицу
+    row = [message.chat.id, message.from_user.first_name, message.text]
+    worksheet.append_row(row)
+    bot.send_message(message.chat.id, 'Данные Внесены')
